@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-dark: #0F172A;
+  --color-bg-light: #F8FAFC;
+  --color-text-dark: #F1F5F9;
+  --color-text-light: #1E293B;
+  --cursor-color-dark: #38bdf8;
+  --cursor-color-light: #0ea5e9;
+  --cursor-shadow-dark: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 5px rgba(56, 189, 248, 0.4);
+  --cursor-shadow-light: 0 0 10px rgba(14, 165, 233, 0.6), 0 0 5px rgba(14, 165, 233, 0.3);
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dark {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-dark);
+}
+
+.light {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-light);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Beautiful cursor styles for both themes */
+.monaco-editor .cursor {
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.dark .monaco-editor .cursor {
+  background-color: var(--cursor-color-dark) !important;
+  box-shadow: var(--cursor-shadow-dark) !important;
+}
+
+.light .monaco-editor .cursor {
+  background-color: var(--cursor-color-light) !important;
+  box-shadow: var(--cursor-shadow-light) !important;
+}
+
+/* Fix for AI panel height issue */
+.cursor-chat-container {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+
+/* Ensure proper sizing for the IDE layout */
+.h-screen.w-screen {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}

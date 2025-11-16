@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+  <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self' file: http: https: data: blob: 'unsafe-eval' 'unsafe-inline';
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net file: http: https:;
+  style-src 'self' 'unsafe-inline' https: file:;
+  img-src 'self' data: https: file: blob:;
+  font-src 'self' https: data: file:;
+  connect-src 'self' https://api.aimlapi.com https://*.openai.com https://*.openai.azure.com https://*.ingest.sentry.io ws: http: https:;
+  worker-src 'self' blob: file:;
+  frame-src 'self' file:;
+  media-src 'self' file:;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+" />
+    <meta name="theme-color" content="#1e1e1e" />
+    <meta
+      name="description"
+      content="Python IDE - AI-Powered Python Development Environment with real-time code execution"
+    />
+  <link rel="apple-touch-icon" href="/logo192.png" />
+  <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Removed explicit preloads for Monaco worker files because preloading
+      worker scripts via <link rel="preload"> is inconsistent across
+      browsers and caused warnings; Monaco will load its workers when needed. -->
+    
+    <title>Python IDE - AI-Powered Python Development</title>
+    <meta name="keywords" content="AI, Python, IDE, code editor, AI coding, Python development" />
+    <meta name="author" content="Python IDE Team" />
+    
+    <!-- Monaco Editor Worker Configuration -->
+    <script>
+      // This script needs to be before any other script that uses Monaco
+      window.MonacoEnvironment = {
+        getWorkerUrl: function (moduleId, label) {
+          if (label === 'json') {
+            return './monaco-json.worker.bundle.js';
+          }
+          if (label === 'css' || label === 'scss' || label === 'less') {
+            return './monaco-css.worker.bundle.js';
+          }
+          if (label === 'html' || label === 'handlebars' || label === 'razor') {
+            return './monaco-html.worker.bundle.js';
+          }
+          if (label === 'typescript' || label === 'javascript') {
+            return './monaco-ts.worker.bundle.js';
+          }
+          return './monaco-editor.worker.bundle.js';
+        }
+      };
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>
