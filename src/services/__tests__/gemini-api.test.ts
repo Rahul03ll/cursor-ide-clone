@@ -6,10 +6,40 @@
 import { streamGenerateCode, generateCode, AI_MODELS } from '../gemini-api';
 
 describe('Gemini API Service', () => {
-  // Test configuration
+  const originalEnv = process.env.REACT_APP_GEMINI_API_KEY;
+  const originalFetch = global.fetch;
+
   const testPrompt = 'Write a simple hello world function in Python';
   const testSystemPrompt = 'You are a helpful coding assistant';
   const modelType = 'gemini';
+
+  beforeEach(() => {
+    process.env.REACT_APP_GEMINI_API_KEY = 'test-gemini-api-key';
+    global.fetch = jest.fn().mockImplementation(async () => {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  { text: 'def hello_world():\n' },
+                  { text: '    print("Hello, World!")\n' },
+                  { text: '    return True\n' },
+                ],
+              },
+            },
+          ],
+        }),
+      } as any;
+    });
+  });
+
+  afterEach(() => {
+    process.env.REACT_APP_GEMINI_API_KEY = originalEnv;
+    global.fetch = originalFetch;
+  });
 
   describe('AI_MODELS Configuration', () => {
     test('should have gemini model configured', () => {
@@ -32,7 +62,7 @@ describe('Gemini API Service', () => {
   describe('streamGenerateCode', () => {
     test('should call onChunk callback with streaming data', (done) => {
       const chunks: string[] = [];
-      
+
       streamGenerateCode(
         testPrompt,
         modelType,
@@ -49,9 +79,15 @@ describe('Gemini API Service', () => {
           done(error);
         }
       );
-    }, 30000); // 30 second timeout for API call
+    });
 
     test('should handle API errors gracefully', (done) => {
+      global.fetch = jest.fn().mockImplementation(async () => ({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: { message: 'Internal Server Error' } }),
+      }));
+
       streamGenerateCode(
         '',
         modelType,
@@ -60,30 +96,32 @@ describe('Gemini API Service', () => {
         () => {},
         (error) => {
           expect(error).toBeDefined();
+          expect(error.message).toContain('Internal Server Error');
           done();
         }
       );
-    }, 30000);
+    });
 
     test('should accumulate chunks into complete response', (done) => {
-      let accumulatedResponse = '';
-      
+      const chunks: string[] = [];
+
       streamGenerateCode(
         testPrompt,
         modelType,
         testSystemPrompt,
         (chunk) => {
-          accumulatedResponse += chunk;
+          chunks.push(chunk);
         },
         (fullResponse) => {
-          expect(accumulatedResponse).toBe(fullResponse);
+          const accumulated = chunks.join('');
+          expect(fullResponse).toBe(accumulated);
           done();
         },
         (error) => {
           done(error);
         }
       );
-    }, 30000);
+    });
   });
 
   describe('generateCode', () => {
@@ -93,17 +131,17 @@ describe('Gemini API Service', () => {
         modelType,
         testSystemPrompt
       );
-      
+
       expect(response).toBeTruthy();
       expect(typeof response).toBe('string');
       expect(response.length).toBeGreaterThan(0);
-    }, 30000);
+    });
 
     test('should handle different prompts', async () => {
       const prompts = [
         'Write a function to add two numbers',
         'Create a class for a Person',
-        'Write a recursive fibonacci function'
+        'Write a recursive fibonacci function',
       ];
 
       for (const prompt of prompts) {
@@ -111,17 +149,18 @@ describe('Gemini API Service', () => {
         expect(response).toBeTruthy();
         expect(response.length).toBeGreaterThan(0);
       }
-    }, 60000);
+    });
 
     test('should use default system prompt if not provided', async () => {
       const response = await generateCode(testPrompt, modelType);
       expect(response).toBeTruthy();
-    }, 30000);
+    });
   });
 
   describe('Error Handling', () => {
     test('should handle missing API key gracefully', (done) => {
-      // This test would need to mock the API key
+      process.env.REACT_APP_GEMINI_API_KEY = '';
+
       streamGenerateCode(
         testPrompt,
         modelType,
@@ -129,13 +168,16 @@ describe('Gemini API Service', () => {
         () => {},
         () => {},
         (error) => {
-          // Error handling is expected
+          expect(error).toBeDefined();
+          expect(error.message).toContain('No API key configured');
           done();
         }
       );
-    }, 30000);
+    });
 
     test('should handle network errors', (done) => {
+      global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+
       streamGenerateCode(
         testPrompt,
         modelType,
@@ -143,11 +185,12 @@ describe('Gemini API Service', () => {
         () => {},
         () => {},
         (error) => {
-          // Error handling is expected
+          expect(error).toBeDefined();
+          expect(error.message).toBe('Network error');
           done();
         }
       );
-    }, 30000);
+    });
   });
 
   describe('Response Format', () => {
@@ -157,10 +200,10 @@ describe('Gemini API Service', () => {
         modelType,
         testSystemPrompt
       );
-      
+
       expect(typeof response).toBe('string');
       expect(response.length).toBeGreaterThan(0);
-    }, 30000);
+    });
 
     test('should handle code blocks in response', async () => {
       const response = await generateCode(
@@ -168,11 +211,9 @@ describe('Gemini API Service', () => {
         modelType,
         testSystemPrompt
       );
-      
+
       expect(response).toBeTruthy();
-      // Response should contain code or explanation
       expect(response.length).toBeGreaterThan(0);
-    }, 30000);
+    });
   });
 });
-

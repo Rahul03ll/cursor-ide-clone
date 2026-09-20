@@ -188,11 +188,11 @@ const MainMenuBar: React.FC<MainMenuBarProps> = ({
     { label: 'Documentation', action: () => window.open('https://github.com/yourusername/ai-coding-ide', '_blank') },
     { label: 'Report Issue', action: () => window.open('https://github.com/yourusername/ai-coding-ide/issues', '_blank') },
     { divider: true },
-    { label: 'About', action: () => alert('AI Coding IDE v0.1.0\nPowered by advanced AI models\n© 2025 Your Company') }
+    { label: 'About', action: () => alert('Cursor Python IDE v1.0.0\nAI-powered Python IDE\n© 2025–2026 Rahul Roy') }
   ];
   
   return (
-    <div className="flex bg-[#252526] text-[#cccccc] text-sm select-none border-b border-[#3e3e42]">
+    <header role="banner" className="flex bg-[#252526] text-[#cccccc] text-sm select-none border-b border-[#3e3e42]">
       <DropdownMenu
         label="File"
         items={fileMenuItems}
@@ -249,7 +249,7 @@ const MainMenuBar: React.FC<MainMenuBarProps> = ({
         onClick={createMenuHandler('help')}
         onClose={closeAllMenus}
       />
-    </div>
+    </header>
   );
 };
 

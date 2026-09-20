@@ -66,7 +66,7 @@ def hello_world():
       const result = await loadCodeFile(testFileName);
       
       expect(result.success).toBe(true);
-      expect(result.content).toBeTruthy();
+      expect(result.code).toBeTruthy();
     }, 10000);
 
     test('should handle non-existent files', async () => {
@@ -83,7 +83,7 @@ def hello_world():
       const result = await loadCodeFile('preserve-test.py');
       
       expect(result.success).toBe(true);
-      expect(result.content).toBe(originalCode);
+      expect(result.code).toBe(originalCode);
     }, 10000);
   });
 
@@ -107,10 +107,10 @@ def hello_world():
       expect(Array.isArray(result.files)).toBe(true);
       
       // Test file properties if files exist
-      const fileCount = result.files.length;
+      const fileCount = result.files ? result.files.length : 0;
       expect(fileCount).toBeGreaterThanOrEqual(0);
       
-      if (fileCount > 0) {
+      if (result.files && result.files.length > 0) {
         const file = result.files[0];
         // eslint-disable-next-line jest/no-conditional-expect
         expect(file.name).toBeTruthy();
@@ -162,7 +162,7 @@ def hello_world():
       const loaded = await loadAutoSavedCode();
       
       expect(loaded.success).toBe(true);
-      expect(loaded.content).toBe(code);
+      expect(loaded.code).toBe(code);
     }, 10000);
 
     test('should overwrite previous autosave', async () => {
@@ -174,7 +174,7 @@ def hello_world():
       
       const loaded = await loadAutoSavedCode();
       
-      expect(loaded.content).toBe(code2);
+      expect(loaded.code).toBe(code2);
     }, 10000);
   });
 
@@ -186,7 +186,7 @@ def hello_world():
       const result = await loadAutoSavedCode();
       
       expect(result.success).toBe(true);
-      expect(result.content).toBe(testCode);
+      expect(result.code).toBe(testCode);
     }, 10000);
 
     test('should handle missing autosave file', async () => {
@@ -213,7 +213,7 @@ def hello_world():
       // Load
       const loadResult = await loadCodeFile(fileName);
       expect(loadResult.success).toBe(true);
-      expect(loadResult.content).toBe(code);
+      expect(loadResult.code).toBe(code);
     }, 30000);
 
     test('should handle multiple file operations', async () => {
@@ -237,7 +237,7 @@ def hello_world():
       for (const file of files) {
         const result = await loadCodeFile(file.name);
         expect(result.success).toBe(true);
-        expect(result.content).toBe(file.code);
+        expect(result.code).toBe(file.code);
       }
     }, 60000);
   });

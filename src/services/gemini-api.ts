@@ -14,28 +14,30 @@ export interface ApiError {
 
 // Free Gemini API configuration
 // IMPORTANT: Get your FREE API key from: https://aistudio.google.com/app/apikey
-const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY || '';
+export const getGeminiApiKey = (): string => process.env.REACT_APP_GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.0-flash'; // Fast and reliable model
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-console.log('🚀 Using Google Gemini API (FREE)');
-console.log('📝 Model:', GEMINI_MODEL);
-console.log('🔑 API Key:', GEMINI_API_KEY ? '✅ Configured' : '❌ MISSING - Get free key from: https://aistudio.google.com/app/apikey');
+if (process.env.NODE_ENV !== 'test') {
+  console.log('🚀 Using Google Gemini API (FREE)');
+  console.log('📝 Model:', GEMINI_MODEL);
+  console.log('🔑 API Key:', getGeminiApiKey() ? '✅ Configured' : '❌ MISSING - Get free key from: https://aistudio.google.com/app/apikey');
 
-// Check if API key is configured
-if (!GEMINI_API_KEY) {
-  console.error('');
-  console.error('⚠️  NO API KEY CONFIGURED!');
-  console.error('');
-  console.error('To use AI features, you need a FREE Google Gemini API key:');
-  console.error('1. Go to: https://aistudio.google.com/app/apikey');
-  console.error('2. Click "Create API Key"');
-  console.error('3. Copy your key');
-  console.error('4. Create a .env file in the project root with:');
-  console.error('   REACT_APP_GEMINI_API_KEY=your_key_here');
-  console.error('');
-  console.error('Or edit src/services/gemini-api.ts line 17');
-  console.error('');
+  // Check if API key is configured
+  if (!getGeminiApiKey()) {
+    console.error('');
+    console.error('⚠️  NO API KEY CONFIGURED!');
+    console.error('');
+    console.error('To use AI features, you need a FREE Google Gemini API key:');
+    console.error('1. Go to: https://aistudio.google.com/app/apikey');
+    console.error('2. Click "Create API Key"');
+    console.error('3. Copy your key');
+    console.error('4. Create a .env file in the project root with:');
+    console.error('   REACT_APP_GEMINI_API_KEY=your_key_here');
+    console.error('');
+    console.error('Or edit src/services/gemini-api.ts line 17');
+    console.error('');
+  }
 }
 
 // Convert messages to Gemini format
@@ -68,8 +70,9 @@ export const streamGenerateCode = async (
   let fullResponseText = '';
 
   try {
+    const apiKey = getGeminiApiKey();
     // Check if API key is configured
-    if (!GEMINI_API_KEY) {
+    if (!apiKey) {
       throw new Error(
         'No API key configured!\n\n' +
         'Get your FREE Google Gemini API key:\n' +
@@ -100,7 +103,7 @@ export const streamGenerateCode = async (
       }
     };
 
-    const response = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

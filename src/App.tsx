@@ -34,7 +34,7 @@ function App() {
     <ErrorBoundary onError={handleGlobalError}>
       <ThemeProvider>
         <ProjectProvider>
-          <div className="app">
+          <div className="app" data-testid="app">
             <MainMenuBar
               onFileAction={handleFileAction}
               onEditAction={handleEditAction}

@@ -12,7 +12,9 @@ import {
   explainCode,
   generateDocumentation,
   planMultiFileEdit,
-  searchProjectContext
+  searchProjectContext,
+  CodeSelection,
+  RefactorOptions
 } from '../aiFeatures';
 
 describe('AI Features Service', () => {
@@ -24,31 +26,47 @@ def add(a, b):
   const testLanguage = 'python';
   const modelType = 'gemini';
 
+  const testSelection: CodeSelection = {
+    code: testCode,
+    startLine: 1,
+    endLine: 4,
+    startColumn: 1,
+    endColumn: 1
+  };
+
   describe('modifyCodeSelection', () => {
     test('should modify code based on instruction', async () => {
       const instruction = 'Add type hints to this function';
       const result = await modifyCodeSelection(
-        testCode,
+        testSelection,
         instruction,
         testLanguage,
         modelType
       );
 
       expect(result).toBeTruthy();
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
+      expect(typeof result.modified).toBe('string');
+      expect(result.modified.length).toBeGreaterThan(0);
     }, 30000);
 
     test('should handle different languages', async () => {
       const jsCode = 'function add(a, b) { return a + b; }';
+      const jsSelection: CodeSelection = {
+        code: jsCode,
+        startLine: 1,
+        endLine: 1,
+        startColumn: 1,
+        endColumn: jsCode.length
+      };
       const result = await modifyCodeSelection(
-        jsCode,
+        jsSelection,
         'Add JSDoc comments',
         'javascript',
         modelType
       );
 
       expect(result).toBeTruthy();
+      expect(result.modified).toBeTruthy();
     }, 30000);
   });
 
@@ -56,8 +74,8 @@ def add(a, b):
     test('should answer questions about code', async () => {
       const question = 'What does this function do?';
       const result = await askAboutCode(
-        testCode,
         question,
+        testCode,
         testLanguage,
         modelType
       );
@@ -75,8 +93,8 @@ def add(a, b):
 
       for (const question of questions) {
         const result = await askAboutCode(
-          testCode,
           question,
+          testCode,
           testLanguage,
           modelType
         );
@@ -93,14 +111,17 @@ def divide(a, b):
       `;
 
       const result = await fixErrorAutomatically(
-        buggyCode,
-        'ZeroDivisionError',
-        testLanguage,
+        {
+          errorMessage: 'ZeroDivisionError: division by zero',
+          code: buggyCode,
+          language: testLanguage,
+          lineNumber: 3
+        },
         modelType
       );
 
       expect(result).toBeTruthy();
-      expect(typeof result).toBe('string');
+      expect(typeof result.modified).toBe('string');
     }, 30000);
 
     test('should handle different error types', async () => {
@@ -112,9 +133,11 @@ def divide(a, b):
 
       for (const error of errors) {
         const result = await fixErrorAutomatically(
-          testCode,
-          error,
-          testLanguage,
+          {
+            errorMessage: error,
+            code: testCode,
+            language: testLanguage
+          },
           modelType
         );
         expect(result).toBeTruthy();
@@ -126,23 +149,23 @@ def divide(a, b):
     test('should refactor code for readability', async () => {
       const result = await refactorCode(
         testCode,
-        'readability',
         testLanguage,
+        { type: 'optimize' },
         modelType
       );
 
       expect(result).toBeTruthy();
-      expect(typeof result).toBe('string');
+      expect(typeof result.modified).toBe('string');
     }, 30000);
 
     test('should support different refactoring types', async () => {
-      const types = ['readability', 'performance', 'maintainability'];
+      const types: RefactorOptions['type'][] = ['optimize', 'general', 'extract-method'];
 
       for (const type of types) {
         const result = await refactorCode(
           testCode,
-          type as any,
           testLanguage,
+          { type },
           modelType
         );
         expect(result).toBeTruthy();
@@ -155,6 +178,7 @@ def divide(a, b):
       const result = await generateUnitTests(
         testCode,
         testLanguage,
+        { framework: 'pytest' },
         modelType
       );
 
@@ -167,6 +191,7 @@ def divide(a, b):
       const result = await generateUnitTests(
         jsCode,
         'javascript',
+        { framework: 'jest' },
         modelType
       );
 
@@ -187,14 +212,14 @@ def divide(a, b):
     }, 30000);
 
     test('should support different detail levels', async () => {
-      const levels = ['brief', 'detailed', 'comprehensive'];
+      const levels = ['brief', 'detailed', 'comprehensive'] as const;
 
       for (const level of levels) {
         const result = await explainCode(
           testCode,
           testLanguage,
           modelType,
-          level as any
+          level
         );
         expect(result).toBeTruthy();
       }
@@ -208,7 +233,7 @@ def divide(a, b):
         testLanguage,
         modelType,
         'detailed',
-        (chunk) => {
+        (_chunk) => {
           progressCalled = true;
         }
       ).then((result) => {
@@ -238,14 +263,14 @@ def divide(a, b):
     }, 30000);
 
     test('should support different documentation types', async () => {
-      const types = ['inline-comments', 'docstrings', 'both'];
+      const types = ['inline-comments', 'docstrings', 'both'] as const;
 
       for (const type of types) {
         const result = await generateDocumentation(
           testCode,
           testLanguage,
           modelType,
-          type as any
+          type
         );
         expect(result).toBeTruthy();
       }
@@ -254,19 +279,21 @@ def divide(a, b):
 
   describe('planMultiFileEdit', () => {
     test('should plan multi-file edits', async () => {
-      const files = [
-        { path: 'main.py', content: testCode },
-        { path: 'utils.py', content: 'def helper(): pass' }
-      ];
+      const projectContext = {
+        files: [
+          { path: 'main.py', content: testCode, language: 'python' },
+          { path: 'utils.py', content: 'def helper(): pass', language: 'python' }
+        ]
+      };
 
       const result = await planMultiFileEdit(
         'Add logging to all functions',
-        files,
+        projectContext,
         modelType
       );
 
       expect(result).toBeTruthy();
-      expect(typeof result).toBe('string');
+      expect(Array.isArray(result)).toBe(true);
     }, 30000);
   });
 
@@ -274,8 +301,8 @@ def divide(a, b):
     test('should search project files', () => {
       const projectContext = {
         files: [
-          { path: 'main.py', content: 'def main(): pass' },
-          { path: 'utils.py', content: 'def helper(): pass' }
+          { path: 'main.py', content: 'def main(): pass', language: 'python' },
+          { path: 'utils.py', content: 'def helper(): pass', language: 'python' }
         ]
       };
 
@@ -288,9 +315,9 @@ def divide(a, b):
     test('should rank results by relevance', () => {
       const projectContext = {
         files: [
-          { path: 'main.py', content: 'def main(): pass' },
-          { path: 'utils.py', content: 'def helper(): pass' },
-          { path: 'test.py', content: 'def test(): pass' }
+          { path: 'main.py', content: 'def main(): pass', language: 'python' },
+          { path: 'utils.py', content: 'def helper(): pass', language: 'python' },
+          { path: 'test.py', content: 'def test(): pass', language: 'python' }
         ]
       };
 
@@ -306,7 +333,7 @@ def divide(a, b):
     test('should handle empty search results', () => {
       const projectContext = {
         files: [
-          { path: 'main.py', content: 'def main(): pass' }
+          { path: 'main.py', content: 'def main(): pass', language: 'python' }
         ]
       };
 
@@ -316,4 +343,3 @@ def divide(a, b):
     });
   });
 });
-
